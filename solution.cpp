@@ -5,13 +5,20 @@ class Chakravyuha {
     private:
         int initialPower, levelCount, rechargeCount, skippedCount;
         vector<int> enemyPower;
+        vector<vector<vector<vector<vector<int>>>>> dp;
 
         bool recursionCheck(int remainingPower, int a, int b, int circleIndex, bool isPrevSkipped) {
             // Crossed all circle
             if(circleIndex == levelCount)
                 return true;
             
+            // If Already solved this case
+            if(dp[circleIndex][remainingPower][a][b][isPrevSkipped] != -1)
+                return dp[circleIndex][remainingPower][a][b][isPrevSkipped];
+            
             int curPowerNeed = enemyPower[circleIndex];
+            bool possibility = false;
+
             // handle edurable enemies
             if(circleIndex == 3 || circleIndex == 7) {
                 if(!isPrevSkipped)
@@ -19,29 +26,26 @@ class Chakravyuha {
             }
 
             // Defeat enemies
-            if(curPowerNeed <= remainingPower && recursionCheck(remainingPower - curPowerNeed, a, b, circleIndex + 1, false))
-                return true;
+            possibility |= (curPowerNeed <= remainingPower && recursionCheck(remainingPower - curPowerNeed, a, b, circleIndex + 1, false));
             
             // Skip the circle
-            else if(a > 0 && recursionCheck(remainingPower, a - 1, b, circleIndex + 1, true))
-                return true;
+            possibility |= (a > 0 && recursionCheck(remainingPower, a - 1, b, circleIndex + 1, true));
 
             // recharge and defeat enemies
-            else if(b > 0 && curPowerNeed <= initialPower && recursionCheck(initialPower - curPowerNeed, a, b - 1, circleIndex + 1, false))
-                return true;
+            possibility |= (b > 0 && curPowerNeed <= initialPower && recursionCheck(initialPower - curPowerNeed, a, b - 1, circleIndex + 1, false));
             
-            // Lost battle
-            return false;
+            // Store result and return
+            return dp[circleIndex][remainingPower][a][b][isPrevSkipped] = possibility;
         }
 
     public:
         Chakravyuha(vector<int> &k, int p, int a, int b) {
             enemyPower = k;
-            initialPower = p;
-            skippedCount = a;
-            rechargeCount = b;
             levelCount = k.size();
-
+            initialPower = p;
+            skippedCount = min(a, levelCount);
+            rechargeCount = min(b, levelCount);
+            dp = vector<vector<vector<vector<vector<int>>>>> (levelCount, vector<vector<vector<vector<int>>>> (initialPower + 1, vector<vector<vector<int>>> (skippedCount + 1, vector<vector<int>> (rechargeCount + 1, vector<int> (2, -1)))));
         }
         
         bool canAbhimanyuCrossChakravyuha() {
